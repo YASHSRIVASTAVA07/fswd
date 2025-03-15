@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from transformers import pipeline
 
 app = Flask(__name__)
+CORS(app)  # Allow frontend requests
 
-# Load pre-trained sentiment analysis model
 sentiment_model = pipeline("sentiment-analysis")
 
 @app.route("/", methods=["GET"])
@@ -18,14 +19,12 @@ def analyze():
             return jsonify({"error": "Missing 'text' field"}), 400
 
         text = data["text"]
-        result = sentiment_model(text)[0]  # Get first result
+        result = sentiment_model(text)[0]  
 
         return jsonify({"sentiment": result["label"], "score": result["score"]})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-import os
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+    app.run(debug=True)
