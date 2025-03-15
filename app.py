@@ -3,9 +3,11 @@ from flask_cors import CORS
 from transformers import pipeline
 
 app = Flask(__name__)
-CORS(app)  # Allow frontend requests
+CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
 
-sentiment_model = pipeline("sentiment-analysis")
+def get_model():
+    """Load model only when needed (prevents memory overload)"""
+    return pipeline("sentiment-analysis")
 
 @app.route("/", methods=["GET"])
 def home():
@@ -19,7 +21,8 @@ def analyze():
             return jsonify({"error": "Missing 'text' field"}), 400
 
         text = data["text"]
-        result = sentiment_model(text)[0]  
+        model = get_model()  # Load model only when needed
+        result = model(text)[0]
 
         return jsonify({"sentiment": result["label"], "score": result["score"]})
 
